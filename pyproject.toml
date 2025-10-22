@@ -1,0 +1,8 @@
+[project]
+name = "reci-checker"
+version = "0.1.0"
+description = "CLI mínimo do verificador de conformidade de manuscritos científicos"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+addopts = "-q"
