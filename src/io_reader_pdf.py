@@ -9,21 +9,11 @@ def extrair_texto_pdf(caminho_arquivo: Path) -> str:
     with fitz.open(str(caminho_arquivo)) as documento_pdf:
         texto = "".join(pagina.get_text("text") for pagina in documento_pdf)
 
-    # Normaliza para remover combinações Unicode (acentos compostos)
     texto = unicodedata.normalize("NFKC", texto)
-
-    # Remove quebras, tabs, caracteres de controle e espaços invisíveis
     texto = re.sub(r"[\n\r\t\f\v\u200B\u200C\u200D\uFEFF\u00A0\u2028\u2029]", "", texto)
-
-    # Remove hífens automáticos e ligaduras comuns
     texto = texto.replace("­", "").replace("‐", "").replace("–", "-")
-
-    # Remove qualquer caractere de controle não imprimível (ASCII < 32)
     texto = "".join(c for c in texto if unicodedata.category(c)[0] != "C")
-
-    # Reduz espaços múltiplos e remove bordas
     texto = re.sub(r" {2,}", " ", texto).strip()
-
     return texto
 
 # Conta instâncias de imagens, incluindo duplicadas
@@ -50,4 +40,5 @@ def extract_document_properties_pdf(caminho_arquivo: Path) -> Dict[str, Any]:
         "characters_no_space_count": caracteres_sem_espaco,
         "pages_count": paginas,
         "images_count": imagens,
+        "text": texto
     }

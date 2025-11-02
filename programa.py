@@ -7,6 +7,7 @@ from pathlib import Path
 from src.io_reader_docx import extract_document_properties_docx
 from src.io_reader_pdf import extract_document_properties_pdf
 from src.extrair_dados_doc import dump_docx_xmls
+from src.structure import detectar_secoes
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger("reci-checker")
@@ -31,6 +32,13 @@ def main() -> int:
         propriedades = extract_document_properties_docx(caminho_manuscrito)
     else:
         propriedades = extract_document_properties_pdf(caminho_manuscrito)
+
+    texto = propriedades.get("text", "")
+    if texto:
+        propriedades["sections"] = detectar_secoes(texto)
+
+    # Remove o texto completo do output final
+    propriedades.pop("text", None)
 
     print(json.dumps(propriedades, ensure_ascii=False, indent=2))
     return 0

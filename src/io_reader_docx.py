@@ -70,4 +70,5 @@ def extract_document_properties_docx(caminho_arquivo: Path) -> Dict[str, Any]:
         "characters_no_space_count": caracteres_sem_espaco,
         "pages_count": paginas,
         "images_count": imagens,
+        "text": texto
     }
