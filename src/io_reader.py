@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Any
-from docx import Document as WordDocument
+from docx import Document
 import fitz  # PyMuPDF
 
 SUPPORTED_EXTENSIONS = {".docx", ".pdf"}
@@ -16,37 +16,30 @@ def validate_supported_file_type(file_path: Path) -> None:
 
 # -------- DOCX --------
 def extract_docx_text(file_path: Path) -> str:
-    doc = WordDocument(str(file_path))
-    text_parts: list[str] = []
-
-    # corpo principal
+    doc = Document(str(file_path))
+    parts = []
     for p in doc.paragraphs:
         if p.text:
-            text_parts.append(p.text)
-
-    # tabelas
-    for tbl in doc.tables:
-        for row in tbl.rows:
-            for cell in row.cells:
-                if cell.text.strip():
-                    text_parts.append(cell.text.strip())
-
-    # cabeçalhos e rodapés
-    for sec in doc.sections:
-        for header_paragraph in sec.header.paragraphs:
-            if header_paragraph.text:
-                text_parts.append(header_paragraph.text)
-        for footer_paragraph in sec.footer.paragraphs:
-            if footer_paragraph.text:
-                text_parts.append(footer_paragraph.text)
-
-    return "\n".join(text_parts)
+            parts.append(p.text)
+    for t in doc.tables:
+        for r in t.rows:
+            for c in r.cells:
+                if c.text.strip():
+                    parts.append(c.text.strip())
+    for s in doc.sections:
+        for h in s.header.paragraphs:
+            if h.text:
+                parts.append(h.text)
+        for f in s.footer.paragraphs:
+            if f.text:
+                parts.append(f.text)
+    return "\n".join(parts)
 
 
 def count_docx_images(file_path: Path) -> int:
-    doc = WordDocument(str(file_path))
-    rel_parts = getattr(doc.part, "related_parts", {})
-    return sum(1 for p in rel_parts.values() if getattr(p, "content_type", "").startswith("image/"))
+    doc = Document(str(file_path))
+    rel = getattr(doc.part, "related_parts", {})
+    return sum(1 for x in rel.values() if getattr(x, "content_type", "").startswith("image/"))
 
 
 # -------- PDF --------
@@ -77,23 +70,23 @@ def extract_document_properties(file_path: Path) -> Dict[str, Any]:
     if ext == ".docx":
         text = extract_docx_text(file_path)
         images = count_docx_images(file_path)
-        pages = None  # ainda será tratado depois
+        pages = None
     else:
         text = extract_pdf_text(file_path)
         images = count_pdf_images(file_path)
         pages = get_pdf_pages(file_path)
 
-    # Contadores simples de caracteres
-    char_count = 0
-    char_no_space = 0
+    # Contagem simples: percorre o texto caractere por caractere
+    total_chars = 0
+    total_chars_no_space = 0
     for ch in text:
-        char_count += 1
-        if not ch.isspace():
-            char_no_space += 1
+        total_chars += 1
+        if ch not in (" ", "\u00A0"):  # ignora apenas espaços normais e NBSP
+            total_chars_no_space += 1
 
     return {
-        "characters_count": char_count,
-        "characters_no_space_count": char_no_space,
+        "characters_count": total_chars,
+        "characters_no_space_count": total_chars_no_space,
         "pages_count": pages,
         "images_count": images,
     }
