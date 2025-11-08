@@ -9,6 +9,8 @@ from src.io_reader_pdf import extract_document_properties_pdf
 from src.extrair_dados_doc import dump_docx_xmls
 from src.structure import detectar_secoes
 
+# Testando novas funcionalidades de logging
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger("reci-checker")
 
